@@ -12,6 +12,11 @@ var server *echo.Echo
 var mediaDir = "output/media"
 var mediaFiles []string
 
+type Response struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
 func web() {
 
 	server = echo.New()
@@ -34,8 +39,11 @@ func web() {
 	// route to capture a thumbnail from the requested device
 	server.GET("/createthumbnail/:device", func(c echo.Context) error {
 		device := c.Param("device")
-		ffmpeg.CreateThumbnail(device)
-		return c.String(200, "Thumbnail created for: "+device)
+		err := ffmpeg.CreateThumbnail(device)
+		if err != nil {
+			return c.JSON(500, Response{Success: false, Message: "Failed to create thumbnail for: "+device})
+		}
+		return c.JSON(200, Response{Success: true, Message: "Thumbnail created for: "+device})
 	})
 
 	// start the server

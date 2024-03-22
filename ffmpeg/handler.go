@@ -71,12 +71,13 @@ func GetVideoDevices() []string {
 	return devices
 }
 
-func CreateThumbnail(device string) {
+func CreateThumbnail(device string) error {
 	fmt.Println("Creating thumbnail for: ", device)
 	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "1", "-vf", "scale=320:240", device+".jpg", "-y")
 	err = cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	fmt.Println("Thumbnail created")
+	return nil
 }
