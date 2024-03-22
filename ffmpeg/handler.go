@@ -23,15 +23,32 @@ func FfmpegStart() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = exec.Command("v4l2-ctl", "--list-devices").Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = exec.Command("arecord", "-L").Run()
-	if err != nil {
-		log.Fatal(err)
-	}
 	fmt.Println(string(version))
+	devices, err := exec.Command("v4l2-ctl").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(devices))
+	alsaDev, err := exec.Command("arecord", "-L").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(alsaDev))
+}
+
+func GetWlan0Ip() string {
+	cmdOutput, err := exec.Command("ip", "addr", "show", "wlan0").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(cmdOutput), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "inet ") {
+			ip := strings.Split(strings.Split(line, " ")[5], "/")[0]
+			return ip
+		}
+	}
+	return ""
 }
 
 func GetVideoDevices() []string {
