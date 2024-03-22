@@ -46,6 +46,25 @@ func web() {
 		return c.JSON(200, Response{Success: true, Message: "Thumbnail created for: "+device})
 	})
 
+	// route to start capturing from the requested device
+	server.GET("/startcapture/:device", func(c echo.Context) error {
+		device := c.Param("device")
+		err := ffmpeg.StartCapture(device)
+		if err != nil {
+			return c.JSON(500, Response{Success: false, Message: "Failed to start capture for: "+device+": "+err.Error()})
+		}
+		return c.JSON(200, Response{Success: true, Message: "Capture started for: "+device})
+	})
+
+	// route to stop capturing from the requested device
+	server.GET("/stopcapture", func(c echo.Context) error {
+		err := ffmpeg.StopCapture()
+		if err != nil {
+			return c.JSON(500, Response{Success: false, Message: "Failed to stop capture"})
+		}
+		return c.JSON(200, Response{Success: true, Message: "Capture stopped"})
+	})
+
 	// start the server
 	fmt.Println("Server starting on "+ffmpeg.GetWlan0Ip()+":80")
 	server.Start(":80")

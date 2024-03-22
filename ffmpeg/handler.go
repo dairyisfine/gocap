@@ -5,11 +5,15 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var cwd string
 var err error
+
+var activeRecording bool
 
 func FfmpegStart() {
 	fmt.Println("ffmpegStart")
@@ -56,13 +60,10 @@ func GetVideoDevices() []string {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	devices := []string{}
 	lines := strings.Split(string(cmdOutput), "\n")
 	for _, line := range lines {
-		// remove whitespace
 		line = strings.TrimSpace(line)
-		// if the first character is a /, it's a device
 		if strings.HasPrefix(line, "/") {
 			deviceName := strings.Replace(line, "/dev/", "", 1)
 			devices = append(devices, deviceName)
@@ -80,4 +81,38 @@ func CreateThumbnail(device string) error {
 	}
 	fmt.Println("Thumbnail created")
 	return nil
+}
+	
+
+func StartCapture(device string) error {
+	fmt.Println("Starting recording for: ", device)
+	// ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 output.mkv
+	fileName := "output_" + device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".mkv"
+	exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-y").Start()
+	// check if fileName was created in current directory
+	// sleep 2 seconds
+	time.Sleep(2 * time.Second)
+	_, err := os.Stat(fileName)
+	if err != nil {
+		return err
+	}
+	activeRecording = true
+	fmt.Println("Recording started")
+	return nil
+}
+
+func StopCapture() error {
+	fmt.Println("Stopping recording")
+	output, err := exec.Command("killall", "ffmpeg").Output()
+	fmt.Println(string(output))
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	activeRecording = false
+	return nil
+}
+
+func IsActiveRecording() bool {
+	return activeRecording
 }
