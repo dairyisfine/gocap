@@ -90,13 +90,18 @@ func StartCapture(device string) error {
 	// ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 output.mkv
 	fileName := device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".flv"
 	
-	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName)
+	// video ONLY
+	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName)
+	
+	// video with thumbnails every 5 seconds
+	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-vf" ,"fps=1/5,scale=320:240", "-update", "1", "thumbnails/"+device+".jpg")
+
 	// same command as above but create a live video stream that runs at the same time as the recording
 	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live/"+device)
 
-	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live", "-vf", "copy", fileName)
+	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live", "-vf", "copy", fileName)
 
-	fmt.Println(activeRecordingProcess.Output())
+	activeRecordingProcess.Start()
 	time.Sleep(1 * time.Second)
 	_, err := os.Stat(fileName)
 	if err != nil {
@@ -117,7 +122,6 @@ func StopCapture() error {
 	}
 	activeRecordingProcess.Wait()
 	activeRecording = false
-	// activeRecordingProcess = nil
 	return nil
 }
 

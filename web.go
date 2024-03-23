@@ -56,6 +56,7 @@ func web() {
 		return c.JSON(200, Response{Success: true, Message: "Capture started for: "+device})
 	})
 
+
 	// route to stop capturing from the requested device
 	server.GET("/stopcapture", func(c echo.Context) error {
 		err := ffmpeg.StopCapture()
