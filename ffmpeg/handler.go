@@ -14,6 +14,7 @@ var cwd string
 var err error
 
 var activeRecording bool
+var activeRecordingProcess *exec.Cmd
 
 func FfmpegStart() {
 	fmt.Println("ffmpegStart")
@@ -74,7 +75,7 @@ func GetVideoDevices() []string {
 
 func CreateThumbnail(device string) error {
 	fmt.Println("Creating thumbnail for: ", device)
-	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "1", "-vf", "scale=320:240", device+".jpg", "-y")
+	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -87,13 +88,20 @@ func CreateThumbnail(device string) error {
 func StartCapture(device string) error {
 	fmt.Println("Starting recording for: ", device)
 	// ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 output.mkv
-	fileName := "output_" + device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".mkv"
-	exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-y").Start()
-	// check if fileName was created in current directory
-	// sleep 2 seconds
-	time.Sleep(2 * time.Second)
+	fileName := device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".flv"
+	
+	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName)
+	// same command as above but create a live video stream that runs at the same time as the recording
+	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live/"+device)
+
+	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live", "-vf", "copy", fileName)
+
+	fmt.Println(activeRecordingProcess.Output())
+	time.Sleep(1 * time.Second)
 	_, err := os.Stat(fileName)
 	if err != nil {
+		activeRecordingProcess.Process.Kill()
+		activeRecordingProcess.Wait()
 		return err
 	}
 	activeRecording = true
@@ -103,13 +111,13 @@ func StartCapture(device string) error {
 
 func StopCapture() error {
 	fmt.Println("Stopping recording")
-	output, err := exec.Command("killall", "ffmpeg").Output()
-	fmt.Println(string(output))
+	err := activeRecordingProcess.Process.Signal(os.Interrupt)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(output))
+	activeRecordingProcess.Wait()
 	activeRecording = false
+	// activeRecordingProcess = nil
 	return nil
 }
 
