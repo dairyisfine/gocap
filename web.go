@@ -21,8 +21,18 @@ func web() {
 
 	server = echo.New()
 
+	// allow all origins
+	server.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+			return next(c)
+		}
+	})
+
 	// media directory serves captures
 	server.Static("/media", "")
+
+	server.Static("/", "../../ui/dist/")
 
 	// route for getting file list
 	server.GET("/mediafilelist", func(c echo.Context) error {
@@ -54,6 +64,10 @@ func web() {
 			return c.JSON(500, Response{Success: false, Message: "Failed to start capture for: "+device+": "+err.Error()})
 		}
 		return c.JSON(200, Response{Success: true, Message: "Capture started for: "+device})
+	})
+
+	server.GET("/activerecording", func(c echo.Context) error {
+		return c.JSON(200, Response{Success: ffmpeg.IsActiveRecording(), Message: ""})
 	})
 
 
