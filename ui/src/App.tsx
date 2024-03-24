@@ -1,13 +1,11 @@
 import {
   createSignal,
   createResource,
-  Match,
+  // Match,
   Show,
   For,
-  Switch,
+  // Switch,
 } from "solid-js";
-import solidLogo from "./assets/solid.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 
 type response = {
@@ -47,8 +45,7 @@ function App() {
     videoDevice,
     fetchVideoThumbnail,
   );
-  const [activeRecording, { refetch: refetchActiveRecording }] =
-    createResource(fetchActiveRecording);
+  const [activeRecording] = createResource(fetchActiveRecording);
 
   return (
     <>
@@ -77,21 +74,14 @@ function App() {
           </div>
         </div>
         <div>
-          <Switch>
-            <Match when={videoThumbnail.loading}>
-              <div>Loading video thumbnail...</div>
-            </Match>
-            <Match when={videoThumbnail.error}>
-              <div>Error loading video thumbnail</div>
-            </Match>
-            <Match when={videoThumbnail()}>
-              <img
-                src={URL.createObjectURL(videoThumbnail() as Blob)}
-                alt="video thumbnail"
-              />
-            </Match>
-          </Switch>
+          <Show when={videoThumbnail()}>
+            <img
+              src={URL.createObjectURL(videoThumbnail() as Blob)}
+              alt="video thumbnail"
+            />
+          </Show>
           <button
+            // class="p-1"
             onClick={async () => {
               createNewThumbnail(videoDevice());
               (() => {
