@@ -75,7 +75,7 @@ func GetVideoDevices() []string {
 
 func CreateThumbnail(device string) error {
 	fmt.Println("Creating thumbnail for: ", device)
-	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
+	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "120", "-update", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
 	err = cmd.Run()
 	if err != nil {
 		return err

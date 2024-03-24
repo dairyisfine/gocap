@@ -22,7 +22,7 @@ func web() {
 	server = echo.New()
 
 	// media directory serves captures
-	server.Static("/media", mediaDir)
+	server.Static("/media", "")
 
 	// route for getting file list
 	server.GET("/mediafilelist", func(c echo.Context) error {
