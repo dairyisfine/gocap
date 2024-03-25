@@ -38,6 +38,7 @@ func web() {
 	// route for getting file list
 	server.GET("/mediafilelist", func(c echo.Context) error {
 		reloadMediaFiles()
+		// filter "thumbnails"
 		return c.JSON(200, mediaFiles)
 	})
 
@@ -55,6 +56,11 @@ func web() {
 			return c.JSON(500, Response{Success: false, Message: "Failed to create thumbnail for: "+device})
 		}
 		return c.JSON(200, Response{Success: true, Message: "Thumbnail created for: "+device})
+	})
+
+	server.GET("/thumbnail/:device", func(c echo.Context) error {
+		device := c.Param("device")
+		return c.File("thumbnails/"+device+".jpg")
 	})
 
 	// route to start capturing from the requested device
@@ -93,6 +99,8 @@ func reloadMediaFiles() {
 		fmt.Println(err)
 	}
 	for _, file := range files {
-		mediaFiles = append(mediaFiles, file.Name())
+		if !file.IsDir() {
+			mediaFiles = append(mediaFiles, file.Name())
+		}
 	}
 }

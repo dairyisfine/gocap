@@ -24,19 +24,32 @@ async function fetchVideoDevices(): Promise<string[]> {
 
 async function fetchVideoThumbnail(device: string): Promise<Blob> {
   // get jpg from /media/thumbnails/{device}
-  const response = await fetch(
-    `http://${serveraddress}/media/thumbnails/${device}.jpg`,
-  );
+  const response = await fetch(`http://${serveraddress}/thumbnail/${device}`, {
+    cache: "no-cache",
+  });
   return response.blob();
 }
 
+async function fetchMediaFileList(): Promise<string[]> {
+  const response = await fetch(`http://${serveraddress}/mediafilelist`, {
+    cache: "no-cache",
+  });
+
+  return response.json();
+}
+
 async function createNewThumbnail(device: string): Promise<void> {
-  await fetch(`http://${serveraddress}/createthumbnail/${device}`);
+  await fetch(`http://${serveraddress}/createthumbnail/${device}`, {
+    cache: "no-cache",
+  });
 }
 
 async function startRecording(device: string): Promise<response> {
   const response = await fetch(
     `http://${serveraddress}/startcapture/${device}`,
+    {
+      cache: "no-cache",
+    },
   );
   const responseJson: response = await response.json();
   if (responseJson.success) {
@@ -48,12 +61,16 @@ async function startRecording(device: string): Promise<response> {
 }
 
 async function stopRecording(): Promise<response> {
-  const response = await fetch(`http://${serveraddress}/stopcapture`);
+  const response = await fetch(`http://${serveraddress}/stopcapture`, {
+    cache: "no-cache",
+  });
   return response.json();
 }
 
 async function fetchActiveRecordingStatus(): Promise<response> {
-  const response = await fetch(`http://${serveraddress}/activerecording`);
+  const response = await fetch(`http://${serveraddress}/activerecording`, {
+    cache: "no-cache",
+  });
   return response.json();
 }
 
@@ -79,10 +96,13 @@ function App() {
   );
   const [activeRecordingStatus, { refetch: refetchActiveRecordingStatus }] =
     createResource(fetchActiveRecordingStatus);
+  const [mediaFileList, { refetch: refetchMediaFileList }] =
+    createResource(fetchMediaFileList);
 
   (async () => {
     setInterval(() => {
       refetchActiveRecordingStatus();
+      refetchMediaFileList();
       if (activeRecordingStatus()?.success) {
         refetchVideoThumbnail();
       }
