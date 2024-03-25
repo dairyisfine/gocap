@@ -75,7 +75,7 @@ func GetVideoDevices() []string {
 
 func CreateThumbnail(device string) error {
 	fmt.Println("Creating thumbnail for: ", device)
-	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-frames:v", "120", "-update", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
+	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-vf" ,"fps=1/2", "-frames:v", "120", "-update", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -87,22 +87,12 @@ func CreateThumbnail(device string) error {
 
 func StartCapture(device string) error {
 	fmt.Println("Starting recording for: ", device)
-	// ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 output.mkv
-	fileName := device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".flv"
+	fileName := device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".mkv"
 	
-	// video ONLY
-	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName)
-	
-	// video with thumbnails every 5 seconds
-	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-vf" ,"fps=1/5,scale=320:240", "-update", "1", "thumbnails/"+device+".jpg")
-
-	// same command as above but create a live video stream that runs at the same time as the recording
-	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live/"+device)
-
-	// activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, "-f", "flv", "rtmp://localhost/live", "-vf", "copy", fileName)
+	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-vf" ,"fps=1/3,scale=320:240", "-update", "1", "thumbnails/"+device+".jpg", "-y")
 
 	activeRecordingProcess.Start()
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	_, err := os.Stat(fileName)
 	if err != nil {
 		activeRecordingProcess.Process.Kill()

@@ -5,6 +5,7 @@ import {
   Show,
   For,
   // Switch,
+  JSX,
 } from "solid-js";
 import "./App.css";
 
@@ -33,9 +34,40 @@ async function createNewThumbnail(device: string): Promise<void> {
   await fetch(`http://${serveraddress}/createthumbnail/${device}`);
 }
 
-async function fetchActiveRecording(): Promise<response> {
+async function startRecording(device: string): Promise<response> {
+  const response = await fetch(
+    `http://${serveraddress}/startcapture/${device}`,
+  );
+  const responseJson: response = await response.json();
+  if (responseJson.success) {
+    console.log("Recording started");
+  } else {
+    window.alert(responseJson.message);
+  }
+  return responseJson;
+}
+
+async function stopRecording(): Promise<response> {
+  const response = await fetch(`http://${serveraddress}/stopcapture`);
+  return response.json();
+}
+
+async function fetchActiveRecordingStatus(): Promise<response> {
   const response = await fetch(`http://${serveraddress}/activerecording`);
   return response.json();
+}
+
+function Button(props: {
+  onClick: () => void;
+  text: string;
+  color: string;
+}): JSX.Element {
+  const buttonClass = `border-1 ${props.color} p-1`;
+  return (
+    <button class={buttonClass} onClick={props.onClick}>
+      {props.text}
+    </button>
+  );
 }
 
 function App() {
@@ -45,7 +77,17 @@ function App() {
     videoDevice,
     fetchVideoThumbnail,
   );
-  const [activeRecording] = createResource(fetchActiveRecording);
+  const [activeRecordingStatus, { refetch: refetchActiveRecordingStatus }] =
+    createResource(fetchActiveRecordingStatus);
+
+  (async () => {
+    setInterval(() => {
+      refetchActiveRecordingStatus();
+      if (activeRecordingStatus()?.success) {
+        refetchVideoThumbnail();
+      }
+    }, 3000);
+  })();
 
   return (
     <>
@@ -80,7 +122,8 @@ function App() {
               alt="video thumbnail"
             />
           </Show>
-          <button
+          <Button
+            color="bg-slate-600"
             // class="p-1"
             onClick={async () => {
               createNewThumbnail(videoDevice());
@@ -97,16 +140,25 @@ function App() {
                 refetchVideoThumbnail;
               })();
             }}
-          >
-            Refresh Thumbnail
-          </button>
+            text="Refresh Thumbnail"
+          />
         </div>
         <div>
-          <Show when={activeRecording()}>
+          <Show when={activeRecordingStatus()}>
             <div>
-              {activeRecording()?.success
-                ? "Recording is active"
-                : "Recording is not active"}
+              {activeRecordingStatus()?.success ? (
+                <Button
+                  color="bg-amber-600"
+                  onClick={stopRecording}
+                  text="Stop Recording"
+                />
+              ) : (
+                <Button
+                  color="bg-red-600"
+                  onClick={() => startRecording(videoDevice())}
+                  text="Start Recording"
+                />
+              )}
             </div>
           </Show>
         </div>

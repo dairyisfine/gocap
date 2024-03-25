@@ -32,6 +32,7 @@ func web() {
 	// media directory serves captures
 	server.Static("/media", "")
 
+	// ui directory serves the web interface
 	server.Static("/", "../../ui/dist/")
 
 	// route for getting file list
