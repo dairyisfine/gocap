@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/dairyisfine/gocap/ffmpeg"
@@ -18,7 +19,6 @@ type Response struct {
 }
 
 func web() {
-
 	server = echo.New()
 
 	// allow all origins
@@ -53,14 +53,14 @@ func web() {
 		device := c.Param("device")
 		err := ffmpeg.CreateThumbnail(device)
 		if err != nil {
-			return c.JSON(500, Response{Success: false, Message: "Failed to create thumbnail for: "+device})
+			return c.JSON(500, Response{Success: false, Message: "Failed to create thumbnail for: " + device})
 		}
-		return c.JSON(200, Response{Success: true, Message: "Thumbnail created for: "+device})
+		return c.JSON(200, Response{Success: true, Message: "Thumbnail created for: " + device})
 	})
 
 	server.GET("/thumbnail/:device", func(c echo.Context) error {
 		device := c.Param("device")
-		return c.File("thumbnails/"+device+".jpg")
+		return c.File("thumbnails/" + device + ".jpg")
 	})
 
 	// route to start capturing from the requested device
@@ -68,15 +68,14 @@ func web() {
 		device := c.Param("device")
 		err := ffmpeg.StartCapture(device)
 		if err != nil {
-			return c.JSON(500, Response{Success: false, Message: "Failed to start capture for: "+device+": "+err.Error()})
+			return c.JSON(500, Response{Success: false, Message: "Failed to start capture for: " + device + ": " + err.Error()})
 		}
-		return c.JSON(200, Response{Success: true, Message: "Capture started for: "+device})
+		return c.JSON(200, Response{Success: true, Message: "Capture started for: " + device})
 	})
 
 	server.GET("/activerecording", func(c echo.Context) error {
 		return c.JSON(200, Response{Success: ffmpeg.IsActiveRecording(), Message: ""})
 	})
-
 
 	// route to stop capturing from the requested device
 	server.GET("/stopcapture", func(c echo.Context) error {
@@ -88,8 +87,11 @@ func web() {
 	})
 
 	// start the server
-	fmt.Println("Server starting on "+ffmpeg.GetWlan0Ip()+":80")
-	server.Start(":80")
+	fmt.Println("Server starting on " + ffmpeg.GetWlan0Ip() + ":80")
+	err := server.Start(":80")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func reloadMediaFiles() {

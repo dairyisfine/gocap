@@ -44,7 +44,7 @@ func FfmpegStart() {
 func GetWlan0Ip() string {
 	cmdOutput, err := exec.Command("ip", "addr", "show", "wlan0").Output()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("cannot retrieve wireless IP")
 	}
 	lines := strings.Split(string(cmdOutput), "\n")
 	for _, line := range lines {
@@ -75,7 +75,7 @@ func GetVideoDevices() []string {
 
 func CreateThumbnail(device string) error {
 	fmt.Println("Creating thumbnail for: ", device)
-	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-vf" ,"fps=1/2", "-frames:v", "120", "-update", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
+	cmd := exec.Command("ffmpeg", "-f", "v4l2", "-i", "/dev/"+device, "-vf", "fps=1/2", "-frames:v", "120", "-update", "1", "-vf", "scale=320:240", "thumbnails/"+device+".jpg", "-y")
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -83,13 +83,12 @@ func CreateThumbnail(device string) error {
 	fmt.Println("Thumbnail created")
 	return nil
 }
-	
 
 func StartCapture(device string) error {
 	fmt.Println("Starting recording for: ", device)
-	fileName := device + "_"+strconv.FormatInt(time.Now().Unix(), 10) + ".mkv"
-	
-	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-vf" ,"fps=1/3,scale=320:240", "-update", "1", "thumbnails/"+device+".jpg", "-y")
+	fileName := device + "_" + strconv.FormatInt(time.Now().Unix(), 10) + ".mkv"
+
+	activeRecordingProcess = exec.Command("ffmpeg", "-f", "v4l2", "-framerate", "30", "-video_size", "640x480", "-i", "/dev/"+device, fileName, "-vf", "fps=1/3,scale=320:240", "-update", "1", "thumbnails/"+device+".jpg", "-y")
 
 	activeRecordingProcess.Start()
 	time.Sleep(2 * time.Second)
@@ -118,3 +117,4 @@ func StopCapture() error {
 func IsActiveRecording() bool {
 	return activeRecording
 }
+
